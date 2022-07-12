@@ -1,9 +1,8 @@
 from datetime import date, datetime
 import json
-from unicodedata import name
+#from unicodedata import name # i would liek to know how to shut this off
 # from pandas import read_json # what the?
 from config import holidayloc
-from config import finalholidaysloc
 from bs4 import BeautifulSoup
 import requests
 from dataclasses import dataclass
@@ -52,6 +51,10 @@ class Holiday:
 
     def __str__ (self):
         return f'{self.name}, ({self.date})'
+
+    def as_dict(self):
+        adict = {"name":self.name,"date":self.date.strftime('%Y-%m-%d')}
+        return adict
 
 @dataclass
 class HolidayList: #
@@ -108,15 +111,18 @@ class HolidayList: #
 
     def readclean(self): #take in the JSONS to inner list remove duplicates empty the final_holiday.json rewrite to it
         holidaylist.read_json(holidayloc)
-        # holidaylist.finaljson(finalholidaysloc)
         holidaylist.scrapeHolidays()
         #open(finalholidaysloc, "w").close() This should clear final_holidays.json if needed
         self.innerHolidays = [i for n, i in enumerate(self.innerHolidays) if i not in self.innerHolidays[n + 1:]] # eliminate dupes
 
     def writetojson(self):
-        listodictionaryholidays = [holidaylist.__dict__ for holidaylist in self.innerHolidays] 
+        randomlist = {}
+        randomlist = [holidaylist.as_dict() for holidaylist in self.innerHolidays] 
+        # randomlist = dict(map(lambda holidaydict: (holidaydict["name"], holidaydict["date"].strftime('%Y-%m-%d')), randomlist))
+        holidays = dict()
+        holidays['holidays'] = randomlist
         with open (holidayloc, "w") as file: #should create it if does not exist
-            json.dump(listodictionaryholidays, file, default=str)
+            json.dump(holidays, file, default=str)
             file.close     
 
     def removeHoliday(self, HolidayName, Date): #DONE
@@ -145,11 +151,7 @@ class HolidayList: #
             #return Holiday
             #result = list(filter(lambda x: (x.name == HolidayName and x.date == Date), self.innerHolidays))
         if self.innerHolidays.__contains__(Holiday(HolidayName,Date)):
-            for x in self.innerHolidays:
-                if x.name == HolidayName and x.date == Date:
-                    found_holiday = x
-            print(found_holiday)
-            return(found_holiday)
+            return(Holiday(HolidayName, Date))
   
     def numHolidays(self): #DONE
         # Return the total number of holidays in innerHolidays
@@ -160,11 +162,13 @@ class HolidayList: #
             # Done Week number is part of the the Datetime object
             # DONE Cast filter results as list
             # DONE return your holidays
-        if (year == int and week_number == int): # shouldnt be necessary will error in input should move the conversion?
-            holidays = list(filter(lambda x : x.date.isocalendar()[1] == week_number and x.date.isocalendar()[0] == year, self.innerHolidays))
+        if (year.isdigit() and week_number.isdigit()): # shouldnt be necessary will error in input should move the conversion?
+            intyear = int(year)
+            intweek_number = int(week_number)
+            holidays = list(filter(lambda x : x.date.isocalendar()[1] == intweek_number and x.date.isocalendar()[0] == intyear, self.innerHolidays))
         else:
             print("Input numbers only.")
-            holidaylist.filter_holidays_by_week(int(get_input("Which year? YYYY:")), int(get_input("Which number? ## 1-52 blank for this week:")))
+            holidaylist.filter_holidays_by_week(get_input("Which year? YYYY:"), get_input("Which number? ## 1-52 blank for this week:"))
         #holidays = list(filter(lambda x: (x.datetime.strptime("%Y") == year and x.datetime.strftime("%W") == week_number), self.innerHolidays)) 
         return holidays
 
@@ -173,8 +177,9 @@ class HolidayList: #
             # DONE formating leaves something to be desiredOutput formated holidays in the week. 
             # DONE * Remember to use the holiday __str__ method.
         #map(lambda x: print(x), holidayList)
+        print(theholidaylist)
         if len(theholidaylist)> 0:
-            print(f"These are the holidays for {holidaylist[0].date.isocalendar()[0]} week {holidaylist[0].date.isocalendar()[1]}")
+            print(f"These are the holidays for this week.")# .date.isocalendar()[0]} 
             for x in theholidaylist:
                 print(x) #weather if possible
         else:
@@ -196,7 +201,7 @@ class HolidayList: #
         # Opted OutIf yes, use your getWeather function and display results
         # Opted Outif weather == "These are the holidays for this week with weather:":
 
-        current = datetime.datetime.now()
+        current = datetime.now()
         holidaylist.displayHolidaysInWeek(holidaylist.filter_holidays_by_week(current.strftime("%Y"), current.strftime("%U")))
 
 def main():
@@ -233,15 +238,17 @@ def main():
         main()
     elif x == "4": #DONE int checking in filter
         display_title("View Holidays") #x.strftime("%Y")
-        weather = confirm_deny(get_input("\nWould you like to see this week's weather? [y/n]: Weather currently unavailable select [n]"), "These will be the holidays for this week with weather:", "These will be the holidays for this week without the weather:")
-        print(weather)
-        currentweekornot = confirm_deny(get_input("\nWould you like to see this week's weather? [y/n]: Weather currently unavailable select [n]"), "These will be the holidays for this week:", "These will be the holidays for the selected year and week:")
-        print(currentweekornot)
+        currentweekornot = confirm_deny(get_input("\nWould you like to see this week's holidays? [y/n]:"), "These are holidays for this week:", "These the holidays for the selected year and week:")
+        if currentweekornot == "These are holidays for this week:":
+            print(currentweekornot)
+            holidaylist.viewCurrentWeek()
         if currentweekornot =="These will be the holidays for the selected year and week:":
-            holidaylist.displayHolidaysInWeek(holidaylist.filter_holidays_by_week(int(get_input("Which year? YYYY:")), int(get_input("Which number? ## 1-52 blank for this week:"))))
+            print(currentweekornot)
+            holidaylist.displayHolidaysInWeek(holidaylist.filter_holidays_by_week(get_input("Which year? YYYY:"), get_input("Which number? ## 1-52 blank for this week:")))
         # if weather == "These are the holidays for this week with weather:":
         #     print('stuff')
             #do API weather schinanigans
+        main()
     elif x == "5": #DONE
         display_title("Exit")
         leave = confirm_deny(get_input("\nAre you sure you want to exit? [y/n]"), "Goodbye!", "Going back to main menu.")
