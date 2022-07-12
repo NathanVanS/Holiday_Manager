@@ -1,5 +1,6 @@
 from datetime import date, datetime
 import json
+from unicodedata import name
 # from pandas import read_json # what the?
 from config import holidayloc
 from config import finalholidaysloc
@@ -46,11 +47,11 @@ class Holiday:
     # 2. You may need to add additional functions
     # 3. You may drop the init if you are using @dataclasses
     # --------------------------------------------
-    theHoliday: str
-    theDate: date
+    name: str
+    date: date
 
     def __str__ (self):
-        return f'{self.theHoliday}, ({self.theDate})'
+        return f'{self.name}, ({self.date})'
 
 @dataclass
 class HolidayList: #
@@ -95,35 +96,26 @@ class HolidayList: #
         #at the end currentlist contains all objects created from scraping and innerlist has been written to  
 
     def read_json(self, filelocation): #takes from passed filelocation and adds to list
-                # Read in things from json file location
-                # Use addHoliday function to add holidays to inner list.
-        with open(filelocation) as json_file: 
-            holidaydict = json.load(json_file)
-            for a in holidaydict['holidays']:
-                thename = a['name']
-                thedate = a['date']
-                thedate = datetime.strptime(thedate, "%Y-%m-%d")
-                self.addHoliday(Holiday(thename, thedate))
-
-    def finaljson(self, filelocation):
-        with open(filelocation) as json_file: #doesnt finish with adding to innerlist errors
-            holidaydict = json.load(json_file)
-            for a in holidaydict:
-                thename = a['theHoliday']
-                thedate = a['theDate']
-                thedate = datetime.strptime(thedate, "%Y-%m-%d")
-                self.addHoliday(Holiday(thename, thedate))
+                    # Read in things from json file location
+                    # Use addHoliday function to add holidays to inner list.
+            with open(filelocation) as json_file: 
+                holidaydict = json.load(json_file)
+                for a in holidaydict['holidays']:
+                    thename = a['name']
+                    thedate = a['date']
+                    thedate = datetime.strptime(thedate, "%Y-%m-%d")
+                    self.addHoliday(Holiday(thename, thedate))
 
     def readclean(self): #take in the JSONS to inner list remove duplicates empty the final_holiday.json rewrite to it
         holidaylist.read_json(holidayloc)
-        holidaylist.finaljson(finalholidaysloc)
+        # holidaylist.finaljson(finalholidaysloc)
         holidaylist.scrapeHolidays()
         #open(finalholidaysloc, "w").close() This should clear final_holidays.json if needed
         self.innerHolidays = [i for n, i in enumerate(self.innerHolidays) if i not in self.innerHolidays[n + 1:]] # eliminate dupes
 
     def writetojson(self):
         listodictionaryholidays = [holidaylist.__dict__ for holidaylist in self.innerHolidays] 
-        with open (finalholidaysloc, "w") as file: #should create it if does not exist
+        with open (holidayloc, "w") as file: #should create it if does not exist
             json.dump(listodictionaryholidays, file, default=str)
             file.close     
 
@@ -151,10 +143,10 @@ class HolidayList: #
     def findHoliday(self, HolidayName, Date):#DONE
             #find Holiday in innerHolidays
             #return Holiday
-            #result = list(filter(lambda x: (x.theHoliday == HolidayName and x.theDate == Date), self.innerHolidays))
+            #result = list(filter(lambda x: (x.name == HolidayName and x.date == Date), self.innerHolidays))
         if self.innerHolidays.__contains__(Holiday(HolidayName,Date)):
             for x in self.innerHolidays:
-                if x.theHoliday == HolidayName and x.theDate == Date:
+                if x.name == HolidayName and x.date == Date:
                     found_holiday = x
             print(found_holiday)
             return(found_holiday)
