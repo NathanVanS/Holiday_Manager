@@ -178,8 +178,8 @@ class HolidayList: #
 
     def displayHolidaysInWeek(self, theholidaylist): #Done needs testing with populated list
             # DONE Use your filter_holidays_by_week to get list of holidays within a week as a parameter
-            # Leaves something to be desired. formating leaves something to be desiredOutput formated holidays in the week. 
-            # * Remember to use the holiday __str__ method.
+            # DONE formating leaves something to be desiredOutput formated holidays in the week. 
+            # DONE * Remember to use the holiday __str__ method.
         #map(lambda x: print(x), holidayList)
         if len(theholidaylist)> 0:
             print(f"These are the holidays for {holidaylist[0].date.isocalendar()[0]} week {holidaylist[0].date.isocalendar()[1]}")
